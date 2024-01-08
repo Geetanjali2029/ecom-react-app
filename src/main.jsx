@@ -5,7 +5,7 @@ import './index.css'
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux'
 import { createStore } from 'redux';
-import reducer from './redux/CartReducer';
+import reducer from './redux';
 
 const store = createStore(reducer);
 

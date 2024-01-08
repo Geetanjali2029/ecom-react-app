@@ -1,41 +1,52 @@
-import React,{ useState, useEffect } from 'react';
+import React,{ useState } from 'react';
 import { connect } from "react-redux";
-// import { addtocart } from '../redux/actions';
 
   const AddToCart = (props) => {
     
     const [cartItems, setCartItems] = useState([]);
-    useEffect(()=>{
-
-    }, [cartItems])
+    let tempCartData = []; 
 
     const addProductToCart = (item) => {
-
-      const isItemInCart = cartItems.find((cartItem) => cartItem.id === item.productData.id); // check if the item is already in the cart
-
-      if (isItemInCart) {
-      setCartItems(
-          cartItems.map((cartItem) => // if the item is already in the cart, increase the quantity of the item
-          cartItem.id === item.productData.id
-              ? { ...cartItem, quantity: cartItem.quantity + 1 }
-              : cartItem // otherwise, return the cart item
-          )
-      );
-      } else {
-      setCartItems([...cartItems, { ...item.productData, quantity: 1 }]); // if the item is not in the cart, add the item to the cart
+      // console.log(props.cart.cartData);return;
+      if(props.cart.cartData.length !== 0){
+        setCartItems(props.cart.cartData);
+        tempCartData = tempCartData.concat(props.cart.cartData);
       }
-      props.cartQuantity(
-        cartItems.reduce((a, b) => a + (b["quantity"] || 0), 0)
-      );
+      
+      if(cartItems.length === 0){
+       
+        tempCartData.push(item);
+        tempCartData = tempCartData.map((cartItem) => // if the item is already in the cart, increase the quantity of the item
+            cartItem.id === item.id
+                ? { ...cartItem, quantity: 1 }
+                : cartItem // otherwise, return the cart item
+            );
+      }else{
+        const isItemInCart = tempCartData.find((cartItem) => cartItem.id === item.id);
 
-      console.log(`cartItems:=>${JSON.stringify(cartItems)}`)
+        if(isItemInCart){
+
+          tempCartData = tempCartData.map((cartItem) => // if the item is already in the cart, increase the quantity of the item
+            cartItem.id === item.id
+                ? { ...cartItem, quantity: parseInt(cartItem.quantity) + 1 }
+                : cartItem // otherwise, return the cart item
+            );
+        }
+      }
+      setCartItems(tempCartData);
+      props.cartData(tempCartData);
+      
+      props.cartQuantity(
+        tempCartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
+      );
+      
     };
         
     return (
       <div>
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
-          onClick={()=>addProductToCart(props)}
+          onClick={()=>addProductToCart(props.productData)}
         >
           Add To Cart
         </button>
@@ -43,14 +54,19 @@ import { connect } from "react-redux";
     );
   }
 
-    
+  const mapStateToProps = (state) => ({
+    cart: state.cart,
+  });
+  
   function mapDispatchToProps(dispatch) {
     return {
       cartQuantity: (cartQuantity) =>
         dispatch({ type: "ADD_TO_CART", data: cartQuantity }),
+      cartData: (cartData) =>
+        dispatch({ type: "CART_DATA", data: cartData }),
     };
   }
   export default connect(
-    null,
+    mapStateToProps,
     mapDispatchToProps
   )(AddToCart);

@@ -11,7 +11,6 @@ function ProductDetail() {
         fetch(`https://fake-ecommerce-app-api.onrender.com/products/${id}`)
          .then((response) => response.json())
          .then((data) => {
-            console.log(data);
             setProductData(data);
          })
          .catch((err) => {

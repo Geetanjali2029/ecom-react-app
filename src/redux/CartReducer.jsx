@@ -13,8 +13,10 @@ const initialState = {
         };
       case "CART_DATA":
       return {
-        ...state,
-        cartData: [...state.cartData, action.data],
+        // ...state,
+        // cartData: state.cartData.concat(action.data)
+        
+        cartData: action.data,
       };
       default:
         return state;

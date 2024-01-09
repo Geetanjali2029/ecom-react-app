@@ -1,24 +1,31 @@
 import React,{useState, useEffect} from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AddToCart from '../components/AddToCart';
+import { useForm } from 'react-hook-form';
 
-function Home(props) {
+function Home() {
   const navigate = useNavigate();
 
     // State to manage the checkbox values
-  const [checkboxes, setCheckboxes] = useState({
-    smartphones:false,
-    skincare: false,
-    groceries:false,
-    home_decoration:false
-    
-    // Add more checkboxes as needed
-  });
+    let initialCheckbox = {
+      smartphones:false,
+      skincare: false,
+      groceries:false,
+      home_decoration:false
+    };
+  const [checkboxes, setCheckboxes] = useState(initialCheckbox);
   const [productList, setProductList] = useState([]);
   const [perPage, setPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategories, setSelctedCategories] = useState([]);
+  const [priceRange, setPriceRange] = useState({minprice:0, maxprice:5000});
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
   // Function to handle checkbox changes
   const handleCheckboxChange = (event, checkboxName) => {
@@ -34,7 +41,7 @@ function Home(props) {
     if(event.target.checked && !selectedCategories.includes(checkbox)){
       setSelctedCategories(selectedCategories => [...selectedCategories, checkbox]);
     }else{
-      setSelctedCategories(selectedCategories.filter((item) => item !== checkbox))
+      setSelctedCategories(selectedCategories.filter((item) => item !== checkbox));
     }
   };
 
@@ -46,18 +53,17 @@ function Home(props) {
   };
 
   useEffect(() => {
-    fetchData(perPage);
-  }, [perPage, selectedCategories])
+    fetchData(perPage, selectedCategories);
+  }, [perPage,selectedCategories]);
 
-   const fetchData = async (per_page, category='') => {
+   const fetchData = async (per_page, category='', minPrice, maxPrice) => {
     if(selectedCategories.length > 0){
       per_page = perPage; //if filter applies then reset the limit parameter in API
       category = selectedCategories.toString();
     }
-      fetch(`https://fake-ecommerce-app-api.onrender.com/products?limit=${per_page}&category=${category}&minPrice=0&maxPrice=5000`)
+      fetch(`https://fake-ecommerce-app-api.onrender.com/products?limit=${per_page}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`)
          .then((response) => response.json())
          .then((data) => {
-            // console.log(data);
             setProductList(data.products);
             setTotalCount(data.totalCount);
          })
@@ -77,6 +83,20 @@ function Home(props) {
     navigate("/product-details/" + id);
   };
 
+  const clearFilter = () => {
+    setCheckboxes(initialCheckbox);
+    setSelctedCategories([]);
+  }
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setPriceRange({ ...priceRange, [name]: value });
+  };
+
+  const filterPriceRange = () =>{
+    fetchData(perPage, selectedCategories, minPrice, maxPrice);
+  }
+
   return (
     <div className="flex-1 bg-gray-100 p-4">
         <h1 className="text-3xl text-left font-bold p-4">E-commerce React App</h1>
@@ -89,7 +109,7 @@ function Home(props) {
             <div className="col-span-1 p-4">
                 {/* Sidebar content goes here */}
                 <span className="font-bold text-2xl text-left pr-4">Filters</span>
-                <span className="text-gray-600 underline text-left">Clear filters</span>
+                <Link className="text-gray-600 underline text-left" onClick={clearFilter}>Clear filters</Link>
                 <div className="pt-4">
                     <span>Categories</span>
                 
@@ -98,7 +118,7 @@ function Home(props) {
                         <input
                         type="checkbox"
                         id="smartphones"
-                        value="smartphones"
+                        // value="smartphones"
                         className="form-checkbox h-5 w-5 text-indigo-600"
                         checked={checkboxes.smartphones}
                         onChange={(e) => handleCheckboxChange(e,'smartphones')}  
@@ -112,7 +132,7 @@ function Home(props) {
                         <input
                         type="checkbox"
                         id="skincare"
-                        value="skincare"
+                        // value="skincare"
                         className="form-checkbox h-5 w-5 text-indigo-600"
                         checked={checkboxes.skincare}
                         onChange={(e) => handleCheckboxChange(e,'skincare')}
@@ -154,56 +174,35 @@ function Home(props) {
                 </div>
 
                 <div className="pt-4">
-                  <span>Price Range</span>
-                  <div className="pt-2 flex items-center">
-                  <input type="text" id="minPrice" placeholder="Min price"/>
-                  <input type="text" id="maxPrice" placeholder="Max price"/>
-                  </div><div className="pt-4">
-                  <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
-          onClick={()=>loadMoreItems(perPage, currentPage + 1)}>Get Price Range</button>
-          </div>
+                  <span className="font-bold">Price Range</span>
+                  <form className="p-4 rounded-md" onSubmit={handleSubmit(filterPriceRange)}>
+                  <div className="grid grid-cols-2 gap-5">
+                  <div>
+                  <input type="text" id="minPrice" className='mt-1 p-2 w-full border rounded-md' placeholder="Min price" 
+                  {...register('minprice', { required: true, onChange: (e) => handleInputChange(e) })} />
+                  {errors.minprice && <p>Minimum price is required.</p>} 
+                  </div>
+                  <div>
+                  <input type="text" id="maxPrice" className='mt-1 p-2 w-full border rounded-md' placeholder="Max price" 
+                  {...register('maxprice', { required: true, onChange: (e) => handleInputChange(e) })} />
+                  {errors.maxprice && <p>Maximum price is required.</p>} 
+                  </div>
+                  </div>
+                    <div className="pt-4">
+                      <button type="submit"
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
+                      >Filter</button>                  
+                    </div>
+                  </form>
                 </div>
-                <div className="pt-4">
-                <span>Customer Rating</span>
-
-                <div className="pt-2 flex items-center">
-
-                        <input
-                        type="checkbox"
-                        id="fourStar"
-                        value="fourStar"
-                        className="form-checkbox h-5 w-5 text-indigo-600"
-                        checked={checkboxes.fourStar}
-                        onChange={(e) => handleRatingCheckboxChange(e,'fourStar')}
-                        />
-                        <label htmlFor="fourStar" className="ml-2 text-gray-700">
-                        4 start & above
-                        </label>
-                        </div>
-                        
-                        <div className="pt-2 flex items-center">
-
-                        <input
-                        type="checkbox"
-                        id="threeStar"
-                        value="threeStar"
-                        className="form-checkbox h-5 w-5 text-indigo-600"
-                        checked={checkboxes.threeStar}
-                        onChange={(e) => handleRatingCheckboxChange(e,'threeStar')}
-                        />
-                        <label htmlFor="threeStar" className="ml-2 text-gray-700">
-                        3 start & above
-                        </label>
-                        </div>
-                </div>
+                
             </div>
 
             <div className="col-span-2 bg-white p-4">
             {productList.length !== 0 && (<span className='text-right'>Showing {productList.length} records</span>)}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   
-                {productList.map((item,index) => (
+                {productList.length !== 0 && productList.map((item,index) => (
                 <div className="bg-white p-4 shadow-md" key={`${item.id}_${index}_product`}>
                     <img src={item.image} alt="Product 1" className="w-full h-48 object-cover mb-4"
                     onClick={()=>goToProductDetail(item.id)}/>

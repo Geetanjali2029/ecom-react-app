@@ -220,16 +220,17 @@ function Home() {
                 </div>
                 ))}
             </div>
-            {productList.length !==0 && totalCount !== productList.length ? (
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
-          onClick={()=>loadMoreItems(perPage, currentPage + 1)}
-        >
-          Load More
-        </button>
-      ):(
-        <span>No data found</span>
-      )}
+            {productList.length !== 0 && totalCount !== productList.length && (
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
+                onClick={()=>loadMoreItems(perPage, currentPage + 1)}
+              >
+                Load More
+              </button>
+            )} 
+            {productList.length === 0 && (
+              <span>No data found</span>
+            )}
                 
             </div>
         </div>

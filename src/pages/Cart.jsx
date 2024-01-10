@@ -20,7 +20,8 @@ function Cart(props) {
   }
   
   const [shippingData, setShippingData] = useState(initialValue);
-  
+  const [quantity, setQuantity] = useState(1);
+
   const {
     register,
     handleSubmit,
@@ -30,9 +31,9 @@ function Cart(props) {
   let shippingCharges = 10.00;
 
   useEffect(() => {
-  setCartItems(props.cart.cartData);
-  calculateAmount(props.cart.cartData);
-  }, [])
+    setCartItems(props.cart.cartData);
+    calculateAmount(props.cart.cartData);
+  }, [cartItems])
 
   const [notification, setNotification] = useState(null);
 
@@ -97,17 +98,52 @@ function Cart(props) {
           .then(json=>console.log(json));
 
       setNotification("Order placed successfully");
+      props.cartData([]);
+      props.cartQuantity(0);
+      navigate("/orders");
   };
 
-  
-  const incrementQuantity = () => {
-    setQuantity(quantity + 1);
-  };
-
-  const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
+  const incrementQuantity = (item) => {
+    let cartData = cartItems;
+    for (var i = 0; i < cartData.length; i++) {
+      if (cartData[i].id === item.id) {
+        cartData[i].quantity = cartData[i].quantity + 1;
+      }
     }
+    console.log(cartData);
+    setCartItems(cartData);
+    setQuantity(quantity + 1);
+
+    props.cartData(cartData);
+
+    props.cartQuantity(
+      cartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
+    );
+};
+
+const decrementQuantity = (item) => {
+  let cartData = cartItems;
+    if (cartItems.quantity > 1) {
+      
+      for (var i = 0; i < cartData.length; i++) {
+        if (cartData[i].id === item.id) {
+          cartData[i].quantity = cartData[i].quantity - 1;
+        }
+      }
+      console.log(cartData);
+      setCartItems(cartData);
+      setQuantity(quantity - 1);
+
+      props.cartData(cartData);
+
+      props.cartQuantity(
+        cartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
+      );
+    }
+};
+
+  const goToProductDetail = (id) => {
+    navigate("/product-details/" + id);
   };
 
   return (
@@ -121,24 +157,26 @@ function Cart(props) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {cartItems.length !== 0 && cartItems.map((item,index) => (
               <div className="bg-white p-4 rounded-md shadow-md" key={index}>
-                <img src={item.image} alt="Product 1" className="w-full h-32 object-cover mb-4 rounded-md" />
+                <img src={item.image} alt="Product 1" className="w-full h-32 object-cover mb-4 rounded-md" 
+                onClick={()=>goToProductDetail(item.id)}/>
                 <h2 className="text-lg font-semibold">{item.title}</h2>
                 <div className="text-gray-600 flex items-center mb-2">
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-l"
-                      onClick={decrementQuantity}
+                      onClick={()=>decrementQuantity(item)}
                     >
                       -
                     </button>
-                    <input
+                    <span className='px-2'>{item.quantity}</span>
+                    {/* <input
                       type="text"
                       value={item.quantity}
                       className="w-10 text-center"
                       readOnly
-                    />
+                    /> */}
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-r"
-                      onClick={incrementQuantity}
+                      onClick={()=>incrementQuantity(item)}
                     >
                       +
                     </button>

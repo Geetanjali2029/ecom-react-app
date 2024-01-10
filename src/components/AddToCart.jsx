@@ -20,21 +20,29 @@ import ShowNotificationDialog from './ShowNotificationDialog';
     }, [notification]);
     
     const addProductToCart = (item) => {
-
-      if(props.cart.cartData.length !== 0 ){
+      let itemIndex = -1;
+      if(props.cart.cartData.length !== 0 ){console.log("1")
         tempCartData = props.cart.cartData;
+        itemIndex = tempCartData.findIndex(x => x.id === item.id);
       }
       
-      if(cartItems.length === 0 ){
-        tempCartData.push({...item, quantity: 1 });
-      }else{
+      if(cartItems.length === 0 && itemIndex === -1){console.log("2")
+        console.log(`findIndex=>${itemIndex}`)
+        if(item.hasOwnProperty('quantity') === false){
+          console.log("2.1")
+          tempCartData.push({...item, quantity: 1 });
+        }else{console.log("2.2")
+          tempCartData.push({...item, quantity: item.quantity });
+        }
+      }else{console.log("3")
         tempCartData = tempCartData.map((cartItem) => // if the item is already in the cart, increase the quantity of the item
           cartItem.id === item.id
               ? { ...cartItem, quantity: parseInt(cartItem.quantity) + 1 }
               : cartItem // otherwise, return the cart item
           );
-        
       }
+
+      console.log(tempCartData)
       setCartItems(tempCartData);
       props.cartData(tempCartData);
       

@@ -14,10 +14,8 @@ function ProductDetail(props) {
         fetch(`https://fake-ecommerce-app-api.onrender.com/products/${id}`)
          .then((response) => response.json())
          .then((data) => {
-            console.log(data);
             if(props.cart.cartData.length !== 0){
                 let getQuantity = props.cart.cartData.find(x => x.id === data.id);
-                console.log(`getQuantity=>${getQuantity}`)
                 if(getQuantity)
                     data.quantity = getQuantity.quantity;
                 else
@@ -25,7 +23,6 @@ function ProductDetail(props) {
             }else
                 data.quantity = 1;
 
-            console.log(data);
             setProductData(data);
          })
          .catch((err) => {
@@ -94,5 +91,3 @@ const mapStateToProps = (state) => ({
   });
   
   export default connect(mapStateToProps,null)(ProductDetail);
-
-// export default ProductDetail

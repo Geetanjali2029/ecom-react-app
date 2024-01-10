@@ -2,9 +2,10 @@ import React,{ useState, useEffect } from 'react';
 import { connect } from "react-redux";
 import { useForm } from 'react-hook-form';
 import ShowNotificationDialog from '../components/ShowNotificationDialog';
+import { useNavigate } from 'react-router-dom';
 
 function Cart(props) {
-
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
@@ -51,8 +52,8 @@ function Cart(props) {
       let tempTotalAmount = 0;
       let tempSubtotal = 0;
       if(productData.length !== 0){
-        productData.map((item) => // if the item is already in the cart, increase the quantity of the item
-        tempSubtotal = tempSubtotal + item.price   
+        productData.map((item) => 
+          tempSubtotal = tempSubtotal + (item.price * item.quantity)
         );
         tempTotalAmount = tempSubtotal + shippingCharges;
       }
@@ -67,7 +68,8 @@ function Cart(props) {
     props.cartData(updatedProducts);
       
     props.cartQuantity(
-      updatedProducts.reduce((a, b) => a + (b["quantity"] || 0), 0)
+      updatedProducts.length
+      // updatedProducts.reduce((a, b) => a + (b["quantity"] || 0), 0)
     );
 
     setNotification("Product removed from cart successfully");
@@ -94,8 +96,7 @@ function Cart(props) {
         body: JSON.stringify(postData)
       };
       fetch('https://fake-ecommerce-app-api.onrender.com/orders', requestOptions)
-          .then(response => response.json())
-          .then(json=>console.log(json));
+          .then(response => response.json());
 
       setNotification("Order placed successfully");
       props.cartData([]);
@@ -110,36 +111,28 @@ function Cart(props) {
         cartData[i].quantity = cartData[i].quantity + 1;
       }
     }
-    console.log(cartData);
     setCartItems(cartData);
     setQuantity(quantity + 1);
+    calculateAmount(cartData);
 
     props.cartData(cartData);
-
-    props.cartQuantity(
-      cartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
-    );
+    props.cartQuantity(cartData.length);
 };
 
 const decrementQuantity = (item) => {
-  let cartData = cartItems;
-    if (cartItems.quantity > 1) {
+      let cartData = cartItems;  
       
       for (var i = 0; i < cartData.length; i++) {
-        if (cartData[i].id === item.id) {
+        if (cartData[i].id === item.id && item.quantity > 1) {
           cartData[i].quantity = cartData[i].quantity - 1;
         }
       }
-      console.log(cartData);
       setCartItems(cartData);
       setQuantity(quantity - 1);
+      calculateAmount(cartData);
 
       props.cartData(cartData);
-
-      props.cartQuantity(
-        cartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
-      );
-    }
+      props.cartQuantity(cartData.length);
 };
 
   const goToProductDetail = (id) => {
@@ -168,12 +161,6 @@ const decrementQuantity = (item) => {
                       -
                     </button>
                     <span className='px-2'>{item.quantity}</span>
-                    {/* <input
-                      type="text"
-                      value={item.quantity}
-                      className="w-10 text-center"
-                      readOnly
-                    /> */}
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-r"
                       onClick={()=>incrementQuantity(item)}

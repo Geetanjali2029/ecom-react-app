@@ -3,17 +3,25 @@ import React, {useState, useEffect} from 'react';
 function Orders() {
 
   const [orderData, setOrderData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`https://fake-ecommerce-app-api.onrender.com/orders/user/13322`)
-         .then((response) => response.json())
-         .then((data) => {
-            setOrderData(data);
-         })
-         .catch((err) => {
-            console.log(err.message);
-         });
-  }, []);
+    if(isLoading){
+      fetchOrders();
+      setIsLoading(false);
+    }
+  }, [isLoading]);
+
+ const fetchOrders = async () => {
+    await fetch(`https://fake-ecommerce-app-api.onrender.com/orders/user/13322`)
+    .then((response) => response.json())
+    .then((data) => {
+       setOrderData(data);
+    })
+    .catch((err) => {
+       console.log(err.message);
+    });
+  }
 
   const convertDate = (param) => {
     const dateString = param;
@@ -31,7 +39,7 @@ function Orders() {
     <div className="flex-1 bg-gray-100 p-4">
         <h1 className="text-3xl font-bold underline pb-6">Your Orders</h1>
         <div className="container mx-auto">
-          <table className="min-w-full bg-white border border-gray-300">
+          {!isLoading && <table className="min-w-full bg-white border border-gray-300">
             <thead>
               <tr>
                 <th className="py-2 px-4 border-b">Order Number</th>
@@ -56,7 +64,7 @@ function Orders() {
               </tr>
               ))}
             </tbody>
-          </table>
+          </table>}
         </div>
     </div>
   );
